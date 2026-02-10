@@ -33,7 +33,7 @@ python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 或者使用快捷命令:
 
 ```powershell
-python backend/main.py
+python -m backend.main
 ```
 
 ### 5. 访问系统

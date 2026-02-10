@@ -48,8 +48,8 @@ async def submit_signin(
     """提交签到"""
     # 获取当前活动
     activity = ActivityService.get_current_activity(db)
-    if not activity:
-        raise HTTPException(status_code=400, detail="暂无活动")
+    if not activity or activity.status == 'ended':
+        raise HTTPException(status_code=400, detail="当前没有活动")
     
     # 如果是主持人,验证密码
     if signin.role == 'host':
