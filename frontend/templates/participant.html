@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>参会人投票 - 投票系统</title>
+    <link rel="stylesheet" href="/static/css/theme.css">
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/mobile.css">
+</head>
+
+<body>
+    <div class="mobile-container vote-container">
+        <!-- 等待状态 -->
+        <div id="waiting-view" class="waiting-state">
+            <div class="waiting-icon">⏳</div>
+            <div class="waiting-text">已签到成功</div>
+            <div class="waiting-text">等待主持人开始投票...</div>
+            <div class="mt-4">
+                <p class="text-muted">您的姓名: <span id="participant-name"></span></p>
+            </div>
+        </div>
+
+        <!-- 投票视图 -->
+        <div id="voting-view" style="display: none;">
+            <h2 id="vote-question" class="vote-question"></h2>
+
+            <!-- 单选/多选 -->
+            <div id="options-view" class="vote-option-list" style="display: none;"></div>
+
+            <!-- 问答题 -->
+            <div id="text-view" style="display: none;">
+                <textarea id="text-answer" class="text-answer" placeholder="请输入您的答案..." maxlength="200"></textarea>
+                <div class="char-count">
+                    <span id="char-count">0</span> / 200
+                </div>
+            </div>
+
+            <!-- 评分题 -->
+            <div id="rating-view" style="display: none;">
+                <div class="rating-container" id="rating-stars">
+                    <span class="star" data-rating="1">⭐</span>
+                    <span class="star" data-rating="2">⭐</span>
+                    <span class="star" data-rating="3">⭐</span>
+                    <span class="star" data-rating="4">⭐</span>
+                    <span class="star" data-rating="5">⭐</span>
+                </div>
+                <div class="rating-label" id="rating-label">请选择评分</div>
+            </div>
+
+            <button id="submit-btn" class="btn btn-primary btn-block btn-lg mt-4">提交</button>
+        </div>
+
+        <!-- 提交成功状态 -->
+        <div id="success-view" class="success-state" style="display: none;">
+            <div class="success-icon">✅</div>
+            <div class="success-text">投票已提交</div>
+            <div class="success-text">等待结果公布...</div>
+        </div>
+    </div>
+
+    <script src="/static/js/websocket.js"></script>
+    <script src="/static/js/participant.js"></script>
+</body>
+
+</html>

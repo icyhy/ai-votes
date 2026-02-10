@@ -1,0 +1,299 @@
+/* 手机端公共样式 */
+
+.mobile-container {
+    min-height: 100vh;
+    padding: var(--spacing-lg);
+    background: var(--bg-secondary);
+}
+
+.mobile-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.mobile-title {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.mobile-card {
+    background: var(--bg-card);
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* 签到页面 */
+.role-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.role-option {
+    padding: var(--spacing-xl);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.role-option:hover {
+    border-color: var(--primary);
+}
+
+.role-option.selected {
+    border-color: var(--primary);
+    background: rgba(52, 152, 219, 0.1);
+}
+
+.role-icon {
+    font-size: var(--text-4xl);
+    margin-bottom: var(--spacing-sm);
+}
+
+.role-name {
+    font-size: var(--text-lg);
+    font-weight: 600;
+}
+
+/* 等待状态 */
+.waiting-state {
+    text-align: center;
+    padding: var(--spacing-2xl);
+}
+
+.waiting-icon {
+    font-size: var(--text-5xl);
+    margin-bottom: var(--spacing-lg);
+}
+
+.waiting-text {
+    font-size: var(--text-xl);
+    color: var(--text-secondary);
+}
+
+/* 主持人控制面板 */
+.control-panel {
+    display: grid;
+    gap: var(--spacing-md);
+}
+
+.stat-card {
+    background: var(--gradient-primary);
+    color: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    text-align: center;
+}
+
+.stat-label {
+    font-size: var(--text-sm);
+    opacity: 0.9;
+    margin-bottom: var(--spacing-xs);
+}
+
+.stat-value {
+    font-size: var(--text-4xl);
+    font-weight: 700;
+}
+
+.vote-selector {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.vote-select-item {
+    padding: var(--spacing-md);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.vote-select-item:hover {
+    border-color: var(--primary);
+    background: rgba(52, 152, 219, 0.05);
+}
+
+.vote-select-title {
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+}
+
+.vote-select-type {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+.control-buttons {
+    display: grid;
+    gap: var(--spacing-sm);
+}
+
+/* 参会人投票界面 */
+.vote-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.vote-question {
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    margin-bottom: var(--spacing-xl);
+    text-align: center;
+}
+
+/* 单选/多选选项 */
+.vote-option-list {
+    display: grid;
+    gap: var(--spacing-md);
+}
+
+.vote-option-item {
+    padding: var(--spacing-lg);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.vote-option-item:hover {
+    border-color: var(--primary);
+    background: rgba(52, 152, 219, 0.05);
+}
+
+.vote-option-item.selected {
+    border-color: var(--primary);
+    background: rgba(52, 152, 219, 0.1);
+}
+
+.option-checkbox {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.vote-option-item.selected .option-checkbox {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.option-text {
+    flex: 1;
+    font-size: var(--text-lg);
+}
+
+/* 问答题 */
+.text-answer {
+    width: 100%;
+    min-height: 150px;
+    padding: var(--spacing-md);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: var(--text-base);
+    font-family: inherit;
+    resize: vertical;
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+.text-answer:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.char-count {
+    text-align: right;
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    margin-top: var(--spacing-xs);
+}
+
+/* 评分题 */
+.rating-container {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-md);
+    margin: var(--spacing-2xl) 0;
+}
+
+.star {
+    font-size: var(--text-5xl);
+    cursor: pointer;
+    transition: var(--transition);
+    opacity: 0.3;
+}
+
+.star.active {
+    opacity: 1;
+    color: #f39c12;
+}
+
+.star:hover {
+    transform: scale(1.2);
+}
+
+.rating-label {
+    text-align: center;
+    font-size: var(--text-xl);
+    color: var(--text-secondary);
+    margin-top: var(--spacing-lg);
+}
+
+/* 提交成功状态 */
+.success-state {
+    text-align: center;
+    padding: var(--spacing-2xl);
+}
+
+.success-icon {
+    font-size: var(--text-5xl);
+    color: var(--success);
+    margin-bottom: var(--spacing-lg);
+}
+
+.success-text {
+    font-size: var(--text-xl);
+    color: var(--text-secondary);
+}
+
+/* 响应式 */
+@media (max-width: 480px) {
+    .mobile-container {
+        padding: var(--spacing-md);
+    }
+
+    .mobile-title {
+        font-size: var(--text-2xl);
+    }
+
+    .vote-question {
+        font-size: var(--text-xl);
+    }
+
+    .rating-container {
+        gap: var(--spacing-sm);
+    }
+
+    .star {
+        font-size: var(--text-4xl);
+    }
+}

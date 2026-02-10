@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互动大屏 - 投票系统</title>
+    <link rel="stylesheet" href="/static/css/theme.css">
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/display.css">
+</head>
+<body>
+    <!-- 主题切换按钮(仅大屏支持) -->
+    <button id="theme-toggle" class="theme-toggle">🌙</button>
+
+    <div class="display-container">
+        <!-- 签到页面 -->
+        <div id="signin-view" class="view active">
+            <div class="signin-content">
+                <h1 class="display-title fade-in">欢迎参加</h1>
+                <h2 id="activity-name" class="activity-name fade-in">企业培训活动</h2>
+                
+                <div class="qrcode-container fade-in">
+                    <img id="qrcode" src="" alt="签到二维码" class="qrcode-image">
+                    <p class="qrcode-hint">请扫描二维码签到</p>
+                </div>
+                
+                <div class="participant-count fade-in">
+                    <span class="count-label">已签到:</span>
+                    <span id="participant-count" class="count-number">0</span>
+                    <span class="count-label">人</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 投票进行中页面 -->
+        <div id="voting-view" class="view">
+            <div class="voting-header">
+                <h2 id="vote-title" class="vote-title"></h2>
+                <img id="small-qrcode" src="" alt="二维码" class="small-qrcode">
+            </div>
+            
+            <div id="vote-options" class="vote-options"></div>
+        </div>
+
+        <!-- 投票结果页面 -->
+        <div id="result-view" class="view">
+            <h2 class="result-title">投票结果</h2>
+            <div id="result-content" class="result-content"></div>
+        </div>
+
+        <!-- 活动统计页面 -->
+        <div id="summary-view" class="view">
+            <h1 class="summary-title">活动统计</h1>
+            <div id="summary-content" class="summary-content"></div>
+        </div>
+
+        <!-- 结束页面 -->
+        <div id="end-view" class="view">
+            <div class="end-content">
+                <h1 class="end-title">谢谢参与!</h1>
+                <p class="end-subtitle">期待下次再见</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/websocket.js"></script>
+    <script src="/static/js/display.js"></script>
+</body>
+</html>

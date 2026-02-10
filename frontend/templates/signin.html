@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>签到 - 投票系统</title>
+    <link rel="stylesheet" href="/static/css/theme.css">
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/mobile.css">
+</head>
+
+<body>
+    <div class="mobile-container">
+        <div class="mobile-header">
+            <h1 class="mobile-title">签到</h1>
+            <p id="activity-name" class="text-muted"></p>
+        </div>
+
+        <div class="mobile-card">
+            <form id="signin-form">
+                <!-- 角色选择 -->
+                <div class="input-group">
+                    <label class="input-label">选择身份 *</label>
+                    <div class="role-selector">
+                        <div class="role-option selected" data-role="participant">
+                            <div class="role-icon">👤</div>
+                            <div class="role-name">参会人</div>
+                        </div>
+                        <div class="role-option" data-role="host">
+                            <div class="role-icon">🎤</div>
+                            <div class="role-name">主持人</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 姓名输入 -->
+                <div class="input-group">
+                    <label class="input-label">姓名 *</label>
+                    <input type="text" id="name-input" class="input" placeholder="请输入您的姓名" required>
+                </div>
+
+                <!-- 部门输入(参会人) -->
+                <div id="department-group" class="input-group">
+                    <label class="input-label">部门 (可选)</label>
+                    <input type="text" id="department-input" class="input" placeholder="请输入您的部门">
+                </div>
+
+                <!-- 密码输入(主持人) -->
+                <div id="password-group" class="input-group" style="display: none;">
+                    <label class="input-label">主持人密码 *</label>
+                    <input type="password" id="password-input" class="input" placeholder="请输入主持人密码">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg mt-4">签到</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/websocket.js"></script>
+    <script>
+        let selectedRole = 'participant';
+
+        // 加载活动信息
+        async function loadActivityInfo() {
+            try {
+                const data = await apiRequest('/api/signin/info');
+                if (data.activity_name) {
+                    document.getElementById('activity-name').textContent = data.activity_name;
+                }
+            } catch (error) {
+                console.error('加载活动信息失败:', error);
+            }
+        }
+
+        // 角色选择
+        document.querySelectorAll('.role-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.role-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                option.classList.add('selected');
+                selectedRole = option.dataset.role;
+
+                // 显示/隐藏相应字段
+                if (selectedRole === 'host') {
+                    document.getElementById('department-group').style.display = 'none';
+                    document.getElementById('password-group').style.display = 'block';
+                    document.getElementById('password-input').required = true;
+                } else {
+                    document.getElementById('department-group').style.display = 'block';
+                    document.getElementById('password-group').style.display = 'none';
+                    document.getElementById('password-input').required = false;
+                }
+            });
+        });
+
+        // 签到表单提交
+        document.getElementById('signin-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('name-input').value;
+            const department = document.getElementById('department-input').value;
+            const password = document.getElementById('password-input').value;
+
+            try {
+                const data = await apiRequest('/api/signin/submit', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        name,
+                        department: department || null,
+                        role: selectedRole,
+                        password: selectedRole === 'host' ? password : null
+                    })
+                });
+
+                // 保存 session_id
+                localStorage.setItem('session_id', data.session_id);
+
+                // 跳转到相应页面
+                window.location.href = data.redirect;
+            } catch (error) {
+                showMessage('签到失败: ' + error.message, 'error');
+            }
+        });
+
+        // 页面加载时
+        loadActivityInfo();
+    </script>
+</body>
+
+</html>

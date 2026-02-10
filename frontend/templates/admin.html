@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员配置 - 投票系统</title>
+    <link rel="stylesheet" href="/static/css/theme.css">
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+
+<body>
+    <!-- 登录界面 -->
+    <div id="login-view" class="login-container">
+        <div class="login-card">
+            <h1 class="text-center mb-4">管理员登录</h1>
+            <form id="login-form">
+                <div class="input-group">
+                    <label class="input-label">密码</label>
+                    <input type="password" id="login-password" class="input" placeholder="请输入管理员密码" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg">登录</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="main-view" class="admin-container" style="display: none;">
+        <div class="admin-header">
+            <h1 class="admin-title">管理员配置</h1>
+            <button id="logout-btn" class="btn btn-danger">退出登录</button>
+        </div>
+
+        <div class="admin-main">
+            <!-- 导航栏 -->
+            <div class="admin-nav">
+                <button class="nav-btn active" data-section="activity">活动配置</button>
+                <button class="nav-btn" data-section="votes">投票管理</button>
+                <button class="nav-btn" data-section="settings">系统设置</button>
+                <button class="nav-btn" data-section="exports">数据导出</button>
+            </div>
+
+            <!-- 活动配置 -->
+            <div id="activity-section" class="admin-section active">
+                <div class="activity-form">
+                    <h2 class="mb-3">创建新活动</h2>
+                    <form id="activity-form">
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label class="input-label">活动名称 *</label>
+                                <input type="text" id="activity-name" class="input" placeholder="例如: 企业培训2026" required>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">活动主题</label>
+                                <input type="text" id="activity-theme" class="input" placeholder="例如: 技术分享">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg">创建活动</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3 class="mb-3">当前活动</h3>
+                    <div id="current-activity">
+                        <p class="text-muted">暂无活动</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 投票管理 -->
+            <div id="votes-section" class="admin-section">
+                <div class="vote-form">
+                    <h2 class="mb-3">添加投票</h2>
+
+                    <!-- 投票类型选择 -->
+                    <div class="vote-type-selector">
+                        <div class="type-option" data-type="single">
+                            <div class="type-icon">📝</div>
+                            <div class="type-name">单选题</div>
+                        </div>
+                        <div class="type-option" data-type="multiple">
+                            <div class="type-icon">☑️</div>
+                            <div class="type-name">多选题</div>
+                        </div>
+                        <div class="type-option" data-type="text">
+                            <div class="type-icon">✍️</div>
+                            <div class="type-name">问答题</div>
+                        </div>
+                        <div class="type-option" data-type="rating">
+                            <div class="type-icon">⭐</div>
+                            <div class="type-name">评分题</div>
+                        </div>
+                    </div>
+
+                    <form id="vote-form">
+                        <input type="hidden" id="vote-type" value="single">
+                        <input type="hidden" id="edit-vote-id" value="">
+
+                        <div class="input-group">
+                            <label class="input-label">投票标题 *</label>
+                            <input type="text" id="vote-title" class="input" placeholder="例如: 最喜欢的课程" required>
+                        </div>
+
+                        <!-- 单选/多选选项 -->
+                        <div id="options-container" class="options-editor">
+                            <label class="input-label">选项 (最多6个)</label>
+                            <div id="options-list">
+                                <div class="option-item">
+                                    <input type="text" class="input option-input" placeholder="选项 1">
+                                    <button type="button" class="btn btn-danger btn-icon remove-option">✕</button>
+                                </div>
+                            </div>
+                            <button type="button" id="add-option-btn" class="btn btn-primary mt-2">+ 添加选项</button>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">保存投票</button>
+                            <button type="button" id="cancel-edit-btn" class="btn btn-warning btn-lg"
+                                style="display: none;">取消编辑</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3 class="mb-3">投票列表</h3>
+                    <div id="vote-list" class="vote-list">
+                        <p class="text-muted">暂无投票</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 系统设置 -->
+            <div id="settings-section" class="admin-section">
+                <!-- 密码设置 -->
+                <div class="password-section">
+                    <h2 class="mb-3">密码设置</h2>
+                    <form id="password-form">
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label class="input-label">管理员密码</label>
+                                <input type="password" id="admin-password" class="input" placeholder="留空则不修改">
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">主持人密码</label>
+                                <input type="password" id="host-password" class="input" placeholder="留空则不修改">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg">保存密码</button>
+                    </form>
+                </div>
+
+                <!-- 网络配置 -->
+                <div class="network-section">
+                    <h2 class="mb-3">网络配置</h2>
+                    <div class="mb-3">
+                        <label class="input-label">当前检测到的 IP 地址:</label>
+                        <div id="detected-ip" class="ip-display">检测中...</div>
+                    </div>
+                    <form id="network-form">
+                        <div class="input-group">
+                            <label class="input-label">手动设置 IP 地址 (可选)</label>
+                            <input type="text" id="manual-ip" class="input" placeholder="例如: 192.168.1.100 或域名">
+                            <small class="text-muted">留空则使用自动检测的 IP 地址</small>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg mt-3">保存配置</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 数据导出 -->
+            <div id="exports-section" class="admin-section">
+                <div class="export-list">
+                    <h2 class="mb-3">历史导出文件</h2>
+                    <div id="export-files">
+                        <p class="text-muted">暂无导出文件</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/websocket.js"></script>
+    <script src="/static/js/admin.js"></script>
+</body>
+
+</html>

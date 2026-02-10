@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主持人控制 - 投票系统</title>
+    <link rel="stylesheet" href="/static/css/theme.css">
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/mobile.css">
+</head>
+
+<body>
+    <div class="mobile-container">
+        <div class="mobile-header">
+            <h1 class="mobile-title">主持人控制</h1>
+            <p id="activity-name" class="text-muted"></p>
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="stat-card">
+            <div class="stat-label">已签到人数</div>
+            <div class="stat-value" id="participant-count">0</div>
+        </div>
+
+        <!-- 投票选择 -->
+        <div class="mobile-card">
+            <h3 class="mb-3">选择投票</h3>
+            <div id="vote-list" class="vote-selector">
+                <p class="text-muted">加载中...</p>
+            </div>
+        </div>
+
+        <!-- 控制按钮 -->
+        <div class="control-buttons">
+            <button id="start-activity-btn" class="btn btn-success btn-block btn-lg">开始活动</button>
+            <button id="end-vote-btn" class="btn btn-warning btn-block btn-lg" style="display: none;">结束并显示结果</button>
+            <button id="exit-vote-btn" class="btn btn-primary btn-block btn-lg" style="display: none;">退出投票</button>
+            <button id="end-activity-btn" class="btn btn-warning btn-block btn-lg">结束活动</button>
+            <button id="close-activity-btn" class="btn btn-danger btn-block btn-lg">退出活动</button>
+        </div>
+    </div>
+
+    <script src="/static/js/websocket.js"></script>
+    <script src="/static/js/host.js"></script>
+</body>
+
+</html>
