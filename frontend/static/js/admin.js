@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (adminToken) {
         showMainView();
         loadCurrentActivity();
-        loadVotes();
+        loadVoteTemplates();
         loadExportFiles();
         loadNetworkInfo();
     } else {
@@ -82,7 +82,7 @@ async function handleLogin(e) {
         showMessage('登录成功', 'success');
         showMainView();
         loadCurrentActivity();
-        loadVotes();
+        loadVoteTemplates();
         loadExportFiles();
         loadNetworkInfo();
     } catch (error) {
@@ -120,9 +120,7 @@ function switchSection(section) {
  */
 async function loadCurrentActivity() {
     try {
-        const data = await apiRequest('/api/admin/activities/current', {
-            headers: { 'Authorization': `Bearer ${adminToken}` }
-        });
+        const data = await apiRequest('/api/admin/activities/current');
 
         currentActivityId = data.id;
         document.getElementById('current-activity').innerHTML = `
@@ -159,11 +157,10 @@ async function handleCreateActivity(e) {
     try {
         await apiRequest('/api/admin/activities', {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${adminToken}` },
             body: JSON.stringify({ name, theme })
         });
 
-        showMessage('活动创建成功', 'success');
+        showMessage('活动创建成功，已自动复制投票模板', 'success');
         document.getElementById('activity-form').reset();
         loadCurrentActivity();
     } catch (error) {
@@ -224,15 +221,10 @@ document.addEventListener('click', (e) => {
 });
 
 /**
- * 保存投票
+ * 保存投票模板
  */
 async function handleSaveVote(e) {
     e.preventDefault();
-
-    if (!currentActivityId) {
-        showMessage('请先创建活动', 'error');
-        return;
-    }
 
     const title = document.getElementById('vote-title').value;
     const type = document.getElementById('vote-type').value;
@@ -252,73 +244,62 @@ async function handleSaveVote(e) {
 
     try {
         if (editVoteId) {
-            // 更新投票
-            await apiRequest(`/api/admin/votes/${editVoteId}`, {
+            // 更新投票模板
+            await apiRequest(`/api/admin/vote-templates/${editVoteId}`, {
                 method: 'PUT',
-                headers: { 'Authorization': `Bearer ${adminToken}` },
                 body: JSON.stringify({ title, type, options })
             });
-            showMessage('投票更新成功', 'success');
+            showMessage('投票模板更新成功', 'success');
         } else {
-            // 创建投票
-            await apiRequest('/api/admin/votes', {
+            // 创建投票模板
+            await apiRequest('/api/admin/vote-templates', {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${adminToken}` },
-                body: JSON.stringify({
-                    activity_id: currentActivityId,
-                    title,
-                    type,
-                    options
-                })
+                body: JSON.stringify({ title, type, options })
             });
-            showMessage('投票创建成功', 'success');
+            showMessage('投票模板创建成功', 'success');
         }
 
         document.getElementById('vote-form').reset();
         document.getElementById('edit-vote-id').value = '';
         document.getElementById('cancel-edit-btn').style.display = 'none';
         selectVoteType('single');
-        loadVotes();
+        loadVoteTemplates();
     } catch (error) {
         showMessage('保存失败: ' + error.message, 'error');
     }
 }
 
 /**
- * 加载投票列表
+ * 加载投票模板列表
  */
-async function loadVotes() {
-    if (!currentActivityId) return;
-
+async function loadVoteTemplates() {
     try {
-        const votes = await apiRequest(`/api/admin/votes/${currentActivityId}`, {
-            headers: { 'Authorization': `Bearer ${adminToken}` }
-        });
+        const templates = await apiRequest('/api/admin/vote-templates');
 
         const voteList = document.getElementById('vote-list');
 
-        if (votes.length === 0) {
-            voteList.innerHTML = '<p class="text-muted">暂无投票</p>';
+        if (templates.length === 0) {
+            voteList.innerHTML = '<p class="text-muted">暂无投票模板</p>';
             return;
         }
 
-        voteList.innerHTML = votes.map(vote => `
+        voteList.innerHTML = templates.map(template => `
             <div class="vote-item">
                 <div class="vote-info">
-                    <div class="vote-title-text">${vote.title}</div>
+                    <div class="vote-title-text">${template.title}</div>
                     <div>
-                        <span class="vote-type-badge">${getVoteTypeText(vote.type)}</span>
-                        ${vote.options ? `<span class="vote-options-preview">${vote.options.join(', ')}</span>` : ''}
+                        <span class="vote-type-badge">${getVoteTypeText(template.type)}</span>
+                        ${template.options ? `<span class="vote-options-preview">${template.options.join(', ')}</span>` : ''}
                     </div>
                 </div>
                 <div class="vote-actions">
-                    <button class="btn btn-primary btn-icon" onclick="editVote(${vote.id})">✏️</button>
-                    <button class="btn btn-danger btn-icon" onclick="deleteVote(${vote.id})">🗑️</button>
+                    <button class="btn btn-primary btn-icon" onclick="editVoteTemplate(${template.id})">✏️</button>
+                    <button class="btn btn-danger btn-icon" onclick="deleteVoteTemplate(${template.id})">🗑️</button>
                 </div>
             </div>
         `).join('');
     } catch (error) {
-        console.error('加载投票失败:', error);
+        console.error('加载投票模板失败:', error);
     }
 }
 
@@ -333,27 +314,25 @@ function getVoteTypeText(type) {
 }
 
 /**
- * 编辑投票
+ * 编辑投票模板
  */
-async function editVote(voteId) {
+async function editVoteTemplate(templateId) {
     try {
-        const votes = await apiRequest(`/api/admin/votes/${currentActivityId}`, {
-            headers: { 'Authorization': `Bearer ${adminToken}` }
-        });
+        const templates = await apiRequest('/api/admin/vote-templates');
 
-        const vote = votes.find(v => v.id === voteId);
-        if (!vote) return;
+        const template = templates.find(t => t.id === templateId);
+        if (!template) return;
 
-        document.getElementById('vote-title').value = vote.title;
-        document.getElementById('vote-type').value = vote.type;
-        document.getElementById('edit-vote-id').value = vote.id;
+        document.getElementById('vote-title').value = template.title;
+        document.getElementById('vote-type').value = template.type;
+        document.getElementById('edit-vote-id').value = template.id;
         document.getElementById('cancel-edit-btn').style.display = 'inline-block';
 
-        selectVoteType(vote.type);
+        selectVoteType(template.type);
 
-        if (vote.options && (vote.type === 'single' || vote.type === 'multiple')) {
+        if (template.options && (template.type === 'single' || template.type === 'multiple')) {
             const optionsList = document.getElementById('options-list');
-            optionsList.innerHTML = vote.options.map((opt, idx) => `
+            optionsList.innerHTML = template.options.map((opt, idx) => `
                 <div class="option-item">
                     <input type="text" class="input option-input" placeholder="选项 ${idx + 1}" value="${opt}">
                     <button type="button" class="btn btn-danger btn-icon remove-option">✕</button>
@@ -364,7 +343,7 @@ async function editVote(voteId) {
         // 滚动到表单
         document.getElementById('vote-form').scrollIntoView({ behavior: 'smooth' });
     } catch (error) {
-        showMessage('加载投票失败: ' + error.message, 'error');
+        showMessage('加载投票模板失败: ' + error.message, 'error');
     }
 }
 
@@ -379,19 +358,18 @@ function cancelEdit() {
 }
 
 /**
- * 删除投票
+ * 删除投票模板
  */
-async function deleteVote(voteId) {
-    if (!confirm('确定要删除这个投票吗?')) return;
+async function deleteVoteTemplate(templateId) {
+    if (!confirm('确定要删除这个投票模板吗？')) return;
 
     try {
-        await apiRequest(`/api/admin/votes/${voteId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${adminToken}` }
+        await apiRequest(`/api/admin/vote-templates/${templateId}`, {
+            method: 'DELETE'
         });
 
         showMessage('删除成功', 'success');
-        loadVotes();
+        loadVoteTemplates();
     } catch (error) {
         showMessage('删除失败: ' + error.message, 'error');
     }
@@ -414,7 +392,6 @@ async function handleSavePasswords(e) {
     try {
         await apiRequest('/api/admin/passwords', {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${adminToken}` },
             body: JSON.stringify({
                 admin_password: adminPassword || undefined,
                 host_password: hostPassword || undefined
@@ -452,7 +429,6 @@ async function handleSaveNetwork(e) {
     try {
         await apiRequest('/api/admin/network', {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${adminToken}` },
             body: JSON.stringify({ manual_ip: manualIp })
         });
 
@@ -468,9 +444,7 @@ async function handleSaveNetwork(e) {
  */
 async function loadExportFiles() {
     try {
-        const data = await apiRequest('/api/admin/exports', {
-            headers: { 'Authorization': `Bearer ${adminToken}` }
-        });
+        const data = await apiRequest('/api/admin/exports');
 
         const exportFiles = document.getElementById('export-files');
 
@@ -485,11 +459,32 @@ async function loadExportFiles() {
                     <div class="export-filename">${file.filename}</div>
                     <div class="export-date">${new Date(file.created_at).toLocaleString('zh-CN')}</div>
                 </div>
-                <a href="/api/admin/exports/${file.filename}?token=${adminToken}" 
-                   class="btn btn-primary" download>下载</a>
+                <div>
+                    <a href="/api/admin/exports/${file.filename}?token=${adminToken}" 
+                       class="btn btn-primary" download>下载</a>
+                    <button class="btn btn-danger" onclick="deleteExportFile('${file.filename}')">删除</button>
+                </div>
             </div>
         `).join('');
     } catch (error) {
         console.error('加载导出文件失败:', error);
+    }
+}
+
+/**
+ * 删除导出文件
+ */
+async function deleteExportFile(filename) {
+    if (!confirm('确定要删除这个导出文件吗？')) return;
+
+    try {
+        await apiRequest(`/api/admin/exports/${filename}`, {
+            method: 'DELETE'
+        });
+
+        showMessage('删除成功', 'success');
+        loadExportFiles();
+    } catch (error) {
+        showMessage('删除失败: ' + error.message, 'error');
     }
 }

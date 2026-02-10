@@ -152,6 +152,25 @@ function handleVoteEnded(data) {
             resultContainer.appendChild(avgEl);
         }, data.results.length * 200);
     }
+
+    // 显示问答题结果 (新增)
+    if (data.answers) {
+        data.answers.forEach((answer, index) => {
+            setTimeout(() => {
+                const answerEl = document.createElement('div');
+                answerEl.className = 'result-item fade-in';
+                answerEl.style.flexDirection = 'column';
+                answerEl.style.alignItems = 'flex-start';
+                answerEl.innerHTML = `
+                    <div class="result-option" style="font-size: var(--text-sm); color: var(--text-muted);">${answer.participant}</div>
+                    <div style="font-size: var(--text-lg); margin-top: 4px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; width: 100%;">
+                        ${answer.text}
+                    </div>
+                `;
+                resultContainer.appendChild(answerEl);
+            }, index * 150);
+        });
+    }
 }
 
 /**

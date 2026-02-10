@@ -45,6 +45,30 @@ class VoteResponse(BaseModel):
     class Config:
         from_attributes = True
 
+# ===== 投票模板相关 =====
+class VoteTemplateCreate(BaseModel):
+    title: str = Field(..., max_length=500)
+    type: str = Field(..., pattern='^(single|multiple|text|rating)$')
+    options: Optional[List[str]] = None  # 单选/多选的选项
+    order_index: Optional[int] = None
+
+class VoteTemplateUpdate(BaseModel):
+    title: Optional[str] = Field(None, max_length=500)
+    type: Optional[str] = Field(None, pattern='^(single|multiple|text|rating)$')
+    options: Optional[List[str]] = None
+    order_index: Optional[int] = None
+
+class VoteTemplateResponse(BaseModel):
+    id: int
+    title: str
+    type: str
+    options: Optional[Any]
+    order_index: Optional[int]
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
 # ===== 签到相关 =====
 class SignInRequest(BaseModel):
     name: str = Field(..., max_length=100)

@@ -22,7 +22,40 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('participant-count').textContent = data.count;
     });
 
-    // 控制按钮
+    wsClient.on('activity_started', () => {
+        showMessage('活动已开始', 'success');
+        updateButtons('active');
+    });
+
+    wsClient.on('vote_started', (data) => {
+        currentVoteId = data.vote_id;
+        showMessage('投票已开始: ' + data.title, 'success');
+        updateButtons('voting');
+    });
+
+    wsClient.on('vote_ended', () => {
+        showMessage('投票已结束', 'info');
+        updateButtons('result');
+    });
+
+    wsClient.on('vote_exited', () => {
+        currentVoteId = null;
+        showMessage('已退出当前投票', 'info');
+        updateButtons('active');
+    });
+
+    wsClient.on('activity_ended', () => {
+        showMessage('活动统计已生成', 'success');
+        updateButtons('summary');
+    });
+
+    wsClient.on('activity_closed', () => {
+        showMessage('活动已关闭', 'info');
+        localStorage.removeItem('session_id');
+        setTimeout(() => window.location.href = '/signin', 2000);
+    });
+
+    // 控制按钮事件监听
     document.getElementById('start-activity-btn').addEventListener('click', startActivity);
     document.getElementById('end-vote-btn').addEventListener('click', endVote);
     document.getElementById('exit-vote-btn').addEventListener('click', exitVote);
@@ -35,20 +68,64 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 async function loadHostStatus() {
     try {
-        const data = await apiRequest('/api/host/status', {
-            headers: { 'X-Session-ID': sessionId }
-        });
+        const data = await apiRequest('/api/host/status');
 
-        // 更新活动名称
         document.getElementById('activity-name').textContent = data.activity_name;
-
-        // 更新签到人数
         document.getElementById('participant-count').textContent = data.participant_count;
 
-        // 渲染投票列表
+        // 恢复当前投票 ID
+        currentVoteId = data.current_vote_id;
+
+        // 根据活动状态初始化按钮显示
+        updateButtons(data.activity_status, currentVoteId !== null);
+
         renderVoteList(data.votes);
     } catch (error) {
         showMessage('加载失败: ' + error.message, 'error');
+    }
+}
+
+/**
+ * 更新按钮显示状态
+ */
+function updateButtons(status, isVoting = false) {
+    const startBtn = document.getElementById('start-activity-btn');
+    const endVoteBtn = document.getElementById('end-vote-btn');
+    const exitVoteBtn = document.getElementById('exit-vote-btn');
+    const endActivityBtn = document.getElementById('end-activity-btn');
+    const closeBtn = document.getElementById('close-activity-btn');
+
+    // 默认全部隐藏
+    [startBtn, endVoteBtn, exitVoteBtn, endActivityBtn, closeBtn].forEach(btn => {
+        if (btn) btn.style.display = 'none';
+    });
+
+    console.log('Updating buttons for status:', status, 'isVoting:', isVoting);
+
+    if (status === 'pending') {
+        startBtn.style.display = 'block';
+    } else if (status === 'active' || status === 'voting' || status === 'result') {
+        // 活动进行中
+        if (currentVoteId) {
+            // 如果有正在进行的投票或结果展示
+            if (status === 'voting' || (status === 'active' && !isVoting)) {
+                // 这里的逻辑需要根据 backend 同步的状态来
+                // 简化: 只要有 currentVoteId, 就显示 End 和 Exit
+                endVoteBtn.style.display = 'block';
+                exitVoteBtn.style.display = 'block';
+            } else if (status === 'result') {
+                exitVoteBtn.style.display = 'block';
+            } else {
+                // 兜底
+                endVoteBtn.style.display = 'block';
+                exitVoteBtn.style.display = 'block';
+            }
+        } else {
+            // 没有活动投票, 显示结束活动按钮
+            endActivityBtn.style.display = 'block';
+        }
+    } else if (status === 'summary' || status === 'ended') {
+        closeBtn.style.display = 'block';
     }
 }
 
@@ -58,8 +135,8 @@ async function loadHostStatus() {
 function renderVoteList(votes) {
     const voteList = document.getElementById('vote-list');
 
-    if (votes.length === 0) {
-        voteList.innerHTML = '<p class="text-muted">暂无投票，请在管理员页面添加</p>';
+    if (!votes || votes.length === 0) {
+        voteList.innerHTML = '<p class="text-muted">暂无投票项目</p>';
         return;
     }
 
@@ -85,122 +162,63 @@ function getVoteTypeText(type) {
  * 选择投票
  */
 async function selectVote(voteId) {
+    if (currentVoteId) {
+        showMessage('当前已有投票正在开启,请先退出', 'error');
+        return;
+    }
+
     if (!confirm('确定开始这个投票吗?')) return;
 
     try {
         await apiRequest('/api/host/vote/start?vote_id=' + voteId, {
-            method: 'POST',
-            headers: { 'X-Session-ID': sessionId }
+            method: 'POST'
         });
-
-        currentVoteId = voteId;
-        showMessage('投票已开始', 'success');
-
-        // 显示控制按钮
-        document.getElementById('end-vote-btn').style.display = 'block';
-        document.getElementById('exit-vote-btn').style.display = 'block';
     } catch (error) {
         showMessage('开始失败: ' + error.message, 'error');
     }
 }
 
-/**
- * 开始活动
- */
+// 绑定到 window 以便 onclick 调用
+window.selectVote = selectVote;
+
 async function startActivity() {
     try {
-        await apiRequest('/api/host/activity/start', {
-            method: 'POST',
-            headers: { 'X-Session-ID': sessionId }
-        });
-
-        showMessage('活动已开始', 'success');
+        await apiRequest('/api/host/activity/start', { method: 'POST' });
     } catch (error) {
         showMessage('操作失败: ' + error.message, 'error');
     }
 }
 
-/**
- * 结束投票
- */
 async function endVote() {
     if (!currentVoteId) return;
-
     try {
-        await apiRequest('/api/host/vote/end?vote_id=' + currentVoteId, {
-            method: 'POST',
-            headers: { 'X-Session-ID': sessionId }
-        });
-
-        showMessage('投票已结束，正在显示结果', 'success');
-
-        // 隐藏控制按钮
-        document.getElementById('end-vote-btn').style.display = 'none';
+        await apiRequest('/api/host/vote/end?vote_id=' + currentVoteId, { method: 'POST' });
     } catch (error) {
         showMessage('操作失败: ' + error.message, 'error');
     }
 }
 
-/**
- * 退出投票
- */
 async function exitVote() {
     try {
-        await apiRequest('/api/host/vote/exit', {
-            method: 'POST',
-            headers: { 'X-Session-ID': sessionId }
-        });
-
-        currentVoteId = null;
-        showMessage('已退出投票', 'success');
-
-        // 隐藏控制按钮
-        document.getElementById('end-vote-btn').style.display = 'none';
-        document.getElementById('exit-vote-btn').style.display = 'none';
+        await apiRequest('/api/host/vote/exit', { method: 'POST' });
     } catch (error) {
         showMessage('操作失败: ' + error.message, 'error');
     }
 }
 
-/**
- * 结束活动
- */
 async function endActivity() {
-    if (!confirm('确定结束活动并显示统计吗?')) return;
-
+    if (!confirm('确定结束活动并显示总结统计吗?')) return;
     try {
-        await apiRequest('/api/host/activity/end', {
-            method: 'POST',
-            headers: { 'X-Session-ID': sessionId }
-        });
-
-        showMessage('活动已结束', 'success');
+        await apiRequest('/api/host/activity/end', { method: 'POST' });
     } catch (error) {
         showMessage('操作失败: ' + error.message, 'error');
     }
 }
 
-/**
- * 退出活动
- */
 async function closeActivity() {
-    if (!confirm('确定退出活动吗? 数据将被保存并重置。')) return;
-
+    if (!confirm('确定关闭并同步数据吗?')) return;
     try {
-        await apiRequest('/api/host/activity/close', {
-            method: 'POST',
-            headers: { 'X-Session-ID': sessionId }
-        });
-
-        showMessage('活动已关闭，数据已保存', 'success');
-
-        // 清除 session
-        localStorage.removeItem('session_id');
-
-        // 3秒后跳转到签到页
-        setTimeout(() => {
-            window.location.href = '/signin';
-        }, 3000);
+        await apiRequest('/api/host/activity/close', { method: 'POST' });
     } catch (error) {
         showMessage('操作失败: ' + error.message, 'error');
     }

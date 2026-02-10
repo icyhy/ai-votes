@@ -51,6 +51,7 @@ async def get_host_status(
         'activity_id': activity.id,
         'activity_name': activity.name,
         'activity_status': activity.status,
+        'current_vote_id': manager.current_vote_id, # 增加当前投票 ID
         'participant_count': participant_count,
         'votes': vote_list
     }
@@ -71,6 +72,7 @@ async def start_activity(
     
     # 更新活动状态
     ActivityService.update_activity_status(db, activity.id, 'active')
+    manager.current_status = 'active'
     
     # 广播活动开始
     await manager.broadcast({
@@ -97,6 +99,8 @@ async def start_vote(
     
     # 解析选项
     options = json.loads(vote.options) if vote.options else None
+    manager.current_vote_id = vote.id
+    manager.current_status = 'voting'
     
     # 广播开始投票
     await manager.broadcast({
@@ -124,6 +128,7 @@ async def end_vote(
     
     # 获取投票结果
     results = VoteService.get_vote_results(db, vote_id)
+    manager.current_status = 'result'
     
     # 广播投票结果
     await manager.broadcast({
@@ -139,6 +144,8 @@ async def exit_vote(
     db: Session = Depends(get_db)
 ):
     """退出投票,回到签到页"""
+    manager.current_vote_id = None
+    manager.current_status = 'active'
     participant = ParticipantService.get_participant_by_session(db, session_id)
     if not participant or participant.role != 'host':
         raise HTTPException(status_code=403, detail="无权限")
@@ -169,6 +176,8 @@ async def end_activity(
     
     # 更新活动状态
     ActivityService.update_activity_status(db, activity.id, 'ended')
+    manager.current_vote_id = None
+    manager.current_status = 'summary'
     
     # 广播活动结束
     await manager.broadcast({

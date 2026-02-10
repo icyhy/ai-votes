@@ -1,17 +1,18 @@
 """
 管理员 API 路由
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.schemas import (
     ActivityCreate, ActivityResponse,
     VoteCreate, VoteUpdate, VoteResponse,
+    VoteTemplateCreate, VoteTemplateUpdate, VoteTemplateResponse,
     PasswordUpdate, NetworkConfig,
     LoginRequest, LoginResponse
 )
-from backend.services import ActivityService, VoteService, ExportService
+from backend.services import ActivityService, VoteService, VoteTemplateService, ExportService
 from backend.config import settings
 from backend.utils import verify_password
 from typing import List
@@ -32,10 +33,11 @@ async def admin_login(request: LoginRequest):
         return LoginResponse(token=token, message="登录成功")
     raise HTTPException(status_code=401, detail="密码错误")
 
-def verify_admin_token(token: str):
+def verify_admin_token(token: str = Query(..., description="管理员令牌")):
     """验证管理员令牌"""
     if token not in admin_tokens:
-        raise HTTPException(status_code=401, detail="未授权")
+        raise HTTPException(status_code=401, detail="令牌无效或已过期,请重新登录")
+    return token
 
 @router.post("/activities", response_model=ActivityResponse)
 async def create_activity(
@@ -148,3 +150,74 @@ async def download_export(
     if not filepath.exists():
         raise HTTPException(status_code=404, detail="文件不存在")
     return FileResponse(filepath, filename=filename)
+
+@router.delete("/exports/{filename}")
+async def delete_export(
+    filename: str,
+    token: str = Depends(verify_admin_token)
+):
+    """删除导出文件"""
+    success = ExportService.delete_export_file(filename)
+    if not success:
+        raise HTTPException(status_code=404, detail="文件不存在或删除失败")
+    return {"message": "删除成功"}
+
+# ===== 投票模板管理 =====
+
+@router.post("/vote-templates", response_model=VoteTemplateResponse)
+async def create_vote_template(
+    template: VoteTemplateCreate,
+    db: Session = Depends(get_db),
+    token: str = Depends(verify_admin_token)
+):
+    """创建投票模板"""
+    db_template = VoteTemplateService.create_template(
+        db, template.title, template.type, template.options, template.order_index
+    )
+    # 解析 options JSON
+    if db_template.options:
+        db_template.options = json.loads(db_template.options)
+    return db_template
+
+@router.get("/vote-templates", response_model=List[VoteTemplateResponse])
+async def get_vote_templates(
+    db: Session = Depends(get_db),
+    token: str = Depends(verify_admin_token)
+):
+    """获取所有投票模板"""
+    templates = VoteTemplateService.get_all_templates(db)
+    # 解析 options JSON
+    for template in templates:
+        if template.options:
+            template.options = json.loads(template.options)
+    return templates
+
+@router.put("/vote-templates/{template_id}", response_model=VoteTemplateResponse)
+async def update_vote_template(
+    template_id: int,
+    template_update: VoteTemplateUpdate,
+    db: Session = Depends(get_db),
+    token: str = Depends(verify_admin_token)
+):
+    """更新投票模板"""
+    db_template = VoteTemplateService.update_template(
+        db, template_id, template_update.title, template_update.type,
+        template_update.options, template_update.order_index
+    )
+    if not db_template:
+        raise HTTPException(status_code=404, detail="投票模板不存在")
+    if db_template.options:
+        db_template.options = json.loads(db_template.options)
+    return db_template
+
+@router.delete("/vote-templates/{template_id}")
+async def delete_vote_template(
+    template_id: int,
+    db: Session = Depends(get_db),
+    token: str = Depends(verify_admin_token)
+):
+    """删除投票模板"""
+    success = VoteTemplateService.delete_template(db, template_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="投票模板不存在")
+    return {"message": "删除成功"}

@@ -17,6 +17,17 @@ class Activity(Base):
     status = Column(String(20), default='pending')  # pending, active, ended
     created_at = Column(DateTime, server_default=func.now())
 
+class VoteTemplate(Base):
+    """投票配置模板表"""
+    __tablename__ = 'vote_templates'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    title = Column(String(500), nullable=False)
+    type = Column(String(20), nullable=False)  # single, multiple, text, rating
+    options = Column(Text)  # JSON 格式
+    order_index = Column(Integer)
+    created_at = Column(DateTime, server_default=func.now())
+
 class Vote(Base):
     """投票表"""
     __tablename__ = 'votes'

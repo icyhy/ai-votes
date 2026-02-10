@@ -172,3 +172,35 @@ class ExportService:
         # 按创建时间倒序排列
         files.sort(key=lambda x: x['created_at'], reverse=True)
         return files
+    
+    @staticmethod
+    def delete_export_file(filename: str) -> bool:
+        """
+        删除导出文件
+        
+        Args:
+            filename: 文件名
+        
+        Returns:
+            是否删除成功
+        """
+        # 安全性验证：防止路径遍历攻击
+        if '..' in filename or '/' in filename or '\\' in filename:
+            return False
+        
+        export_dir = Path("data/exports")
+        filepath = export_dir / filename
+        
+        # 确保文件存在且是 CSV 文件
+        if not filepath.exists() or filepath.suffix != '.csv':
+            return False
+        
+        # 确保文件在导出目录内
+        if not filepath.resolve().parent == export_dir.resolve():
+            return False
+        
+        try:
+            filepath.unlink()
+            return True
+        except Exception:
+            return False

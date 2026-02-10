@@ -17,6 +17,9 @@ class ConnectionManager:
             'host': [],         # 主持人
             'participant': []   # 参会人
         }
+        # 缓存当前状态以便新连接同步
+        self.current_vote_id = None
+        self.current_status = 'pending' # pending, active, voting, result, summary
     
     async def connect(self, websocket: WebSocket, client_type: str = 'display'):
         """

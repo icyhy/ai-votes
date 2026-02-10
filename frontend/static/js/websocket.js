@@ -140,16 +140,44 @@ function updateThemeIcon(theme) {
  */
 async function apiRequest(url, options = {}) {
     try {
+        // 自动处理 URL 参数
+        if (options.params) {
+            const query = new URLSearchParams(options.params).toString();
+            url = `${url}${url.includes('?') ? '&' : '?'}${query}`;
+        }
+
+        // 自动处理身份验证
+        const headers = {
+            'Content-Type': 'application/json',
+            ...options.headers
+        };
+
+        // 如果有 admin_token,自动加入(除非显式提供)
+        const adminToken = localStorage.getItem('admin_token');
+        if (adminToken && !url.includes('token=')) {
+            url = `${url}${url.includes('?') ? '&' : '?'}token=${adminToken}`;
+        }
+
+        // 如果有 session_id,加入请求头
+        const sessionId = localStorage.getItem('session_id');
+        if (sessionId) {
+            headers['X-Session-ID'] = sessionId;
+        }
+
         const response = await fetch(url, {
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            },
-            ...options
+            ...options,
+            headers
         });
 
         if (!response.ok) {
             const error = await response.json();
+            // 如果是 401 或 403,说明 session 失效
+            if (response.status === 401 || response.status === 403) {
+                if (window.location.pathname.includes('/host') || window.location.pathname.includes('/participant')) {
+                    localStorage.removeItem('session_id');
+                    window.location.href = '/signin';
+                }
+            }
             throw new Error(error.detail || '请求失败');
         }
 

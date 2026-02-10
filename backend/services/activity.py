@@ -21,6 +21,11 @@ class ActivityService:
         db.add(db_activity)
         db.commit()
         db.refresh(db_activity)
+        
+        # 自动从投票模板复制投票列表到新活动
+        from backend.services.vote_template import VoteTemplateService
+        VoteTemplateService.copy_templates_to_activity(db, db_activity.id)
+        
         return db_activity
     
     @staticmethod

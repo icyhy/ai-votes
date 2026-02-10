@@ -49,9 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 async function loadParticipantStatus() {
     try {
-        const data = await apiRequest('/api/participant/status', {
-            headers: { 'X-Session-ID': sessionId }
-        });
+        const data = await apiRequest('/api/participant/status');
 
         document.getElementById('participant-name').textContent = data.name;
     } catch (error) {
@@ -218,7 +216,6 @@ async function submitVote() {
     try {
         await apiRequest('/api/participant/vote', {
             method: 'POST',
-            headers: { 'X-Session-ID': sessionId },
             body: JSON.stringify({
                 vote_id: currentVote.vote_id,
                 answer
