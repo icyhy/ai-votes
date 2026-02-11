@@ -188,30 +188,66 @@ function handleActivityEnded(data) {
     switchView('summary');
 
     const summaryContainer = document.getElementById('summary-content');
+
+    // 基础统计卡片：总签到人数和完成投票数并排显示
     summaryContainer.innerHTML = `
-        <div class="summary-card fade-in">
-            <div class="summary-label">总签到人数</div>
-            <div class="summary-value">${data.total_participants} 人</div>
-        </div>
-        <div class="summary-card fade-in">
-            <div class="summary-label">完成投票数</div>
-            <div class="summary-value">${data.votes_completed} 个</div>
+        <div class="summary-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div class="summary-card fade-in">
+                <div class="summary-label">总签到人数</div>
+                <div class="summary-value">${data.total_participants} 人</div>
+            </div>
+            <div class="summary-card fade-in">
+                <div class="summary-label">完成投票数</div>
+                <div class="summary-value">${data.votes_completed} 个</div>
+            </div>
         </div>
     `;
 
-    // 显示每个投票的参与情况
-    if (data.votes_summary && data.votes_summary.length > 0) {
-        data.votes_summary.forEach((vote, index) => {
-            setTimeout(() => {
-                const voteCard = document.createElement('div');
-                voteCard.className = 'summary-card fade-in';
-                voteCard.innerHTML = `
-                    <div class="summary-label">${vote.title}</div>
-                    <div class="summary-value">${vote.participants} 人参与</div>
-                `;
-                summaryContainer.appendChild(voteCard);
-            }, (index + 2) * 200);
-        });
+    let cardDelay = 1;
+
+    // 显示参与度最高的问卷
+    if (data.most_popular_vote) {
+        setTimeout(() => {
+            const popularCard = document.createElement('div');
+            popularCard.className = 'summary-card fade-in';
+            popularCard.innerHTML = `
+                <div class="summary-label">🏆 参与度最高的问卷</div>
+                <div class="summary-value">${data.most_popular_vote.title}</div>
+                <div class="summary-label" style="font-size: var(--text-base); margin-top: 8px;">${data.most_popular_vote.participants} 人参与</div>
+            `;
+            summaryContainer.appendChild(popularCard);
+        }, cardDelay * 200);
+        cardDelay++;
+    }
+
+    // 显示参与次数最多的前三名人员
+    if (data.top_participants && data.top_participants.length > 0) {
+        setTimeout(() => {
+            const topCard = document.createElement('div');
+            topCard.className = 'summary-card fade-in';
+            const medals = ['🥇', '🥈', '🥉'];
+            const topList = data.top_participants.map((p, idx) =>
+                `<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; ${idx < data.top_participants.length - 1 ? 'border-bottom: 1px solid rgba(255,255,255,0.1);' : ''}">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: var(--text-2xl);">${medals[idx]}</span>
+                        <div>
+                            <div style="font-size: var(--text-lg); font-weight: 600;">${p.name}</div>
+                            <div style="font-size: var(--text-sm); color: var(--text-muted);">${p.department}</div>
+                        </div>
+                    </div>
+                    <div style="font-size: var(--text-xl); font-weight: bold; color: var(--primary);">${p.vote_count} 次</div>
+                </div>`
+            ).join('');
+
+            topCard.innerHTML = `
+                <div class="summary-label">👥 参与问卷次数最多</div>
+                <div style="margin-top: 16px;">
+                    ${topList}
+                </div>
+            `;
+            summaryContainer.appendChild(topCard);
+        }, cardDelay * 200);
+        cardDelay++;
     }
 }
 

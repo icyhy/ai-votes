@@ -57,6 +57,8 @@ class ActivityService:
         
         # 每个投票的参与情况
         votes_summary = []
+        vote_participation = {}  # 用于找出参与度最高的问卷
+        
         for vote in votes:
             vote_count = db.query(VoteRecord).filter(
                 VoteRecord.vote_id == vote.id
@@ -66,11 +68,54 @@ class ActivityService:
                 'type': vote.type,
                 'participants': vote_count
             })
+            vote_participation[vote.id] = {
+                'title': vote.title,
+                'type': vote.type,
+                'participants': vote_count
+            }
+        
+        # 统计参与问卷次数最多的前三名人员
+        from sqlalchemy import func, desc
+        top_participants_query = db.query(
+            Participant.id,
+            Participant.name,
+            Participant.department,
+            func.count(VoteRecord.id).label('vote_count')
+        ).join(
+            VoteRecord, VoteRecord.participant_id == Participant.id
+        ).filter(
+            Participant.activity_id == activity_id
+        ).group_by(
+            Participant.id, Participant.name, Participant.department
+        ).order_by(
+            desc('vote_count')
+        ).limit(3).all()
+        
+        top_participants = [
+            {
+                'name': p.name,
+                'department': p.department or '未填写',
+                'vote_count': p.vote_count
+            }
+            for p in top_participants_query
+        ]
+        
+        # 找出参与度最高的问卷
+        most_popular_vote = None
+        if vote_participation:
+            max_participants = max(v['participants'] for v in vote_participation.values())
+            if max_participants > 0:
+                for vote_data in vote_participation.values():
+                    if vote_data['participants'] == max_participants:
+                        most_popular_vote = vote_data
+                        break
         
         return {
             'total_participants': total_participants,
             'votes_completed': votes_completed,
-            'votes_summary': votes_summary
+            'votes_summary': votes_summary,
+            'top_participants': top_participants,
+            'most_popular_vote': most_popular_vote
         }
     
     @staticmethod
